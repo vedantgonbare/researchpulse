@@ -1,8 +1,8 @@
 # app/main.py
 from fastapi import FastAPI
-from app.api import auth
 from app.models.user import User
 from app.models.paper import Paper
+from app.api import auth
 
 app = FastAPI(
     title="ResearchPulse API",
@@ -10,7 +10,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Register auth routes
 app.include_router(auth.router)
 
 @app.get("/")

@@ -5,6 +5,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserLogin, UserResponse, TokenResponse
 from app.core.security import hash_password, verify_password, create_access_token
+from app.core.dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -50,3 +51,11 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
     # Create JWT token with user id inside
     token = create_access_token(data={"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
+
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    """
+    Protected route — returns current logged in user.
+    Requires valid JWT token in Authorization header.
+    """
+    return current_user
