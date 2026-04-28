@@ -56,10 +56,7 @@ async def search(
     q: str = Query(..., description="Search keyword"),
     max_results: int = Query(5, le=20)
 ):
-    """
-    Search arXiv papers by keyword — no auth needed.
-    Example: /papers/search?q=transformer+attention
-    """
+
     results = await search_papers(q, max_results)
     if not results:
         raise HTTPException(status_code=404, detail="No papers found")
