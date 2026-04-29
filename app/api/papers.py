@@ -7,6 +7,7 @@ from app.models.user import User
 from app.models.paper import Paper
 from app.schemas.paper import PaperCreate, PaperResponse
 from app.services.arxiv import fetch_paper_by_id, search_papers
+from app.schemas.paper import PaperUpdate
 
 router = APIRouter(prefix="/papers", tags=["Papers"])
 
@@ -108,3 +109,31 @@ def delete_paper(
     db.delete(paper)
     db.commit()
     return {"message": "Paper deleted successfully"}
+
+@router.patch("/{paper_id}", response_model=PaperResponse)
+def update_paper(
+    paper_id: int,
+    update_data: PaperUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update tags, notes, or read status of a saved paper"""
+    paper = db.query(Paper).filter(
+        Paper.id == paper_id,
+        Paper.owner_id == current_user.id
+    ).first()
+
+    if not paper:
+        raise HTTPException(status_code=404, detail="Paper not found")
+
+    # Only update fields that were actually sent
+    if update_data.tags is not None:
+        paper.tags = update_data.tags
+    if update_data.notes is not None:
+        paper.notes = update_data.notes
+    if update_data.is_read is not None:
+        paper.is_read = update_data.is_read
+
+    db.commit()
+    db.refresh(paper)
+    return paper
