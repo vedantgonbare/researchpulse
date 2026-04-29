@@ -19,10 +19,8 @@ async def fetch_paper_by_id(arxiv_id: str) -> Optional[dict]:
         "max_results": 1
     }
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(follow_redirects=True) as client:
         response = await client.get(ARXIV_BASE_URL, params=params)
-    print("STATUS:", response.status_code)
-    print("RESPONSE:", response.text[:500])  # first 500 chars
 
     if response.status_code != 200:
         return None
@@ -41,7 +39,7 @@ async def search_papers(query: str, max_results: int = 5) -> list[dict]:
         "sortBy": "relevance"
     }
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(follow_redirects=True) as client:
         response = await client.get(ARXIV_BASE_URL, params=params)
 
     if response.status_code != 200:
