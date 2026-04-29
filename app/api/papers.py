@@ -8,6 +8,7 @@ from app.models.paper import Paper
 from app.schemas.paper import PaperCreate, PaperResponse
 from app.services.arxiv import fetch_paper_by_id, search_papers
 from app.schemas.paper import PaperUpdate
+from app.services.cache import get_cached, set_cache, delete_cache
 
 router = APIRouter(prefix="/papers", tags=["Papers"])
 
@@ -57,11 +58,22 @@ async def search(
     q: str = Query(..., description="Search keyword"),
     max_results: int = Query(5, le=20)
 ):
+    """Search arXiv — results cached in Redis for 1 hour"""
+    cache_key = f"search:{q}:{max_results}"
 
+    # Check cache first
+    cached = get_cached(cache_key)
+    if cached:
+        return {"source": "cache", "results": cached}
+
+    # Not in cache — fetch from arXiv
     results = await search_papers(q, max_results)
     if not results:
         raise HTTPException(status_code=404, detail="No papers found")
-    return results
+
+    # Save to cache
+    set_cache(cache_key, results, expire_seconds=3600)
+    return {"source": "arxiv", "results": results}
 
 
 @router.get("/", response_model=list[PaperResponse])
