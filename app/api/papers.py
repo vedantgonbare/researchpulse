@@ -9,6 +9,7 @@ from app.schemas.paper import PaperCreate, PaperResponse
 from app.services.arxiv import fetch_paper_by_id, search_papers
 from app.schemas.paper import PaperUpdate
 from app.services.cache import get_cached, set_cache, delete_cache
+from app.services.ai import summarize_abstract
 
 router = APIRouter(prefix="/papers", tags=["Papers"])
 
@@ -146,6 +147,42 @@ def update_paper(
     if update_data.is_read is not None:
         paper.is_read = update_data.is_read
 
+    db.commit()
+    db.refresh(paper)
+    return paper
+
+@router.post("/{paper_id}/summarize", response_model=PaperResponse)
+def summarize_paper(
+    paper_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate AI summary for a saved paper.
+    Calls OpenAI GPT with the paper abstract.
+    Saves summary to DB + returns updated paper.
+    """
+    paper = db.query(Paper).filter(
+        Paper.id == paper_id,
+        Paper.owner_id == current_user.id
+    ).first()
+
+    if not paper:
+        raise HTTPException(status_code=404, detail="Paper not found")
+
+    # Already summarized — return cached version
+    if paper.ai_summary:
+        return paper
+
+    try:
+        summary = summarize_abstract(paper.abstract)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
+
+    # Save summary to DB
+    paper.ai_summary = summary
     db.commit()
     db.refresh(paper)
     return paper
