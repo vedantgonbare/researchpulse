@@ -4,6 +4,7 @@ from app.models.user import User
 from app.models.paper import Paper
 from app.api import auth
 from app.api import papers
+from app.api import files
 
 app = FastAPI(
     title="ResearchPulse API",
@@ -13,6 +14,7 @@ app = FastAPI(
 
 app.include_router(auth.router)
 app.include_router(papers.router)
+app.include_router(files.router)
 
 @app.get("/")
 def root():
