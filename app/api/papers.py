@@ -10,9 +10,10 @@ from app.services.arxiv import fetch_paper_by_id, search_papers
 from app.schemas.paper import PaperUpdate
 from app.services.cache import get_cached, set_cache, delete_cache
 from app.services.ai import summarize_abstract
+from fastapi import BackgroundTasks
+from app.services.digest import generate_digest, mark_all_read
 
 router = APIRouter(prefix="/papers", tags=["Papers"])
-
 
 @router.post("/", response_model=PaperResponse)
 async def add_paper(
@@ -85,6 +86,36 @@ def get_my_papers(
     """Get all papers saved by current user"""
     papers = db.query(Paper).filter(Paper.owner_id == current_user.id).all()
     return papers
+
+@router.get("/digest")
+def get_digest(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get weekly digest of all unread papers.
+    Returns summary report for current user.
+    """
+    digest = generate_digest(current_user.id, db)
+    return digest
+
+
+@router.post("/digest/mark-read")
+def mark_digest_read(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Mark all unread papers as read.
+    Runs as background task — returns immediately.
+    """
+    def do_mark_read():
+        count = mark_all_read(current_user.id, db)
+        print(f"Marked {count} papers as read for user {current_user.id}")
+
+    background_tasks.add_task(do_mark_read)
+    return {"message": "Marking all papers as read in background..."}
 
 
 @router.get("/{paper_id}", response_model=PaperResponse)
