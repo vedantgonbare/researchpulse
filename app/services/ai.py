@@ -1,9 +1,9 @@
 # app/services/ai.py
-from openai import OpenAI
+from google import genai
 from app.core.config import settings
 
-# Initialize OpenAI client using key from .env
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+# New Google GenAI client
+client = genai.Client(api_key=settings.OPENAI_API_KEY)
 
 SUMMARIZE_PROMPT = """You are a research assistant. Given the abstract of an academic paper, produce a concise 3-5 sentence plain-English summary. Focus on:
 - What problem it solves
@@ -16,24 +16,7 @@ Abstract:
 Summary:"""
 
 def summarize_abstract(abstract: str) -> str:
-    """
-    Summarize a paper abstract using OpenAI GPT.
-    Returns plain-English summary string.
-    Raises ValueError if abstract is empty.
-    """
     if not abstract or not abstract.strip():
         raise ValueError("Abstract is empty")
-
-    prompt = SUMMARIZE_PROMPT.format(abstract=abstract)
-
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=300,
-        temperature=0.5
-    )
-
-    summary = response.choices[0].message.content.strip()
-    return summary
+    # TODO: Replace with real AI when quota available
+    return f"AI Summary: This paper explores {abstract[:100]}... [Full AI summary pending API quota]"
