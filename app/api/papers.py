@@ -12,10 +12,11 @@ from app.services.cache import get_cached, set_cache, delete_cache
 from app.services.ai import summarize_abstract
 from fastapi import BackgroundTasks
 from app.services.digest import generate_digest, mark_all_read
+from app.core.limiter import rate_limit
 
 router = APIRouter(prefix="/papers", tags=["Papers"])
 
-@router.post("/", response_model=PaperResponse)
+@router.post("/", response_model=PaperResponse, dependencies=[Depends(rate_limit(max_requests=20, window_seconds=60))])
 async def add_paper(
     paper_data: PaperCreate,
     db: Session = Depends(get_db),
@@ -55,7 +56,7 @@ async def add_paper(
     return new_paper
 
 
-@router.get("/search")
+@router.get("/search", dependencies=[Depends(rate_limit(max_requests=15, window_seconds=60))])
 async def search(
     q: str = Query(..., description="Search keyword"),
     max_results: int = Query(5, le=20)
@@ -182,7 +183,7 @@ def update_paper(
     db.refresh(paper)
     return paper
 
-@router.post("/{paper_id}/summarize", response_model=PaperResponse)
+@router.post("/{paper_id}/summarize", response_model=PaperResponse, dependencies=[Depends(rate_limit(max_requests=5, window_seconds=60))])
 def summarize_paper(
     paper_id: int,
     db: Session = Depends(get_db),

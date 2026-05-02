@@ -3,13 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.services.storage import upload_file
+from app.core.limiter import rate_limit
 
 router = APIRouter(prefix="/files", tags=["Files"])
 
 ALLOWED_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/jpg"]
 MAX_SIZE_MB = 10
 
-@router.post("/upload")
+@router.post("/upload", dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))])
 async def upload(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user)
