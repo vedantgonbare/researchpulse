@@ -24,8 +24,7 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str = ""
     CLOUDINARY_API_SECRET: str = ""
 
-    class Config:
-        env_file = ".env"
+    model_config = {"env_file": ".env"}
 
 # Single instance used everywhere
 settings = Settings()

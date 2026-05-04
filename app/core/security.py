@@ -1,5 +1,5 @@
 # app/core/security.py
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from app.core.config import settings
@@ -20,7 +20,7 @@ def create_access_token(data: dict) -> str:
     to_encode = data.copy()
 
     # Token expires after X minutes (set in config)
-    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
 
     # Sign the token with our secret key

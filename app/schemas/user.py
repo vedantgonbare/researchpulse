@@ -21,8 +21,7 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True  # Allows reading from SQLAlchemy model
+    model_config = {"from_attributes": True}
 
 class TokenResponse(BaseModel):
     """JWT token response after successful login"""
