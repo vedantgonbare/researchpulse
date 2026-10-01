@@ -13,6 +13,7 @@ from app.services.ai import summarize_abstract
 from fastapi import BackgroundTasks
 from app.services.digest import generate_digest, mark_all_read
 from app.core.limiter import rate_limit
+from app.services.embeddings import embed_text
 
 router = APIRouter(prefix="/papers", tags=["Papers"])
 
@@ -40,6 +41,13 @@ async def add_paper(
     if not paper_info:
         raise HTTPException(status_code=404, detail="Paper not found on arXiv")
 
+    # Embed the abstract for RAG retrieval — best-effort, never blocks saving the paper
+    embedding = None
+    try:
+        embedding = embed_text(paper_info["abstract"], task_type="RETRIEVAL_DOCUMENT")
+    except Exception as e:
+        print(f"Embedding failed for arxiv_id={paper_info['arxiv_id']}: {e}")
+
     # Save to DB
     new_paper = Paper(
         arxiv_id=paper_info["arxiv_id"],
@@ -47,7 +55,8 @@ async def add_paper(
         authors=paper_info["authors"],
         abstract=paper_info["abstract"],
         url=paper_info["url"],
-        owner_id=current_user.id
+        owner_id=current_user.id,
+        embedding=embedding
     )
 
     db.add(new_paper)
