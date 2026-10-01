@@ -1,14 +1,17 @@
 # app/models/paper.py
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.base import Base
+
 
 class Paper(Base):
     """
     This class = 'papers' table in PostgreSQL.
     Stores academic papers fetched from arXiv.
     """
+
     __tablename__ = "papers"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -17,10 +20,13 @@ class Paper(Base):
     authors = Column(String, nullable=False)
     abstract = Column(Text, nullable=False)
     url = Column(String, nullable=False)
-    tags = Column(String, default="")         # comma-separated tags
-    notes = Column(Text, default="")          # user's personal notes
+    tags = Column(String, default="")  # comma-separated tags
+    notes = Column(Text, default="")  # user's personal notes
     is_read = Column(Boolean, default=False)  # reading tracker
-    ai_summary = Column(Text, default="")     # AI generated summary
+    ai_summary = Column(Text, default="")  # AI generated summary
+    embedding = Column(
+        Vector(768), nullable=True
+    )  # Gemini embedding of the abstract, for RAG retrieval
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Foreign key → links paper to a user
