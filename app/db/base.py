@@ -8,4 +8,3 @@ class Base(DeclarativeBase):
     SQLAlchemy uses it to track all tables.
     """
     pass
-
