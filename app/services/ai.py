@@ -21,8 +21,9 @@ Summary:"""
 def summarize_abstract(abstract: str) -> str:
     if not abstract or not abstract.strip():
         raise ValueError("Abstract is empty")
-    # TODO: Replace with real AI when quota available
-    return f"AI Summary: This paper explores {abstract[:100]}... [Full AI summary pending API quota]"
+
+    prompt = SUMMARIZE_PROMPT.format(abstract=abstract)
+    return generate_answer(prompt)
 
 
 def generate_answer(prompt: str) -> str:
