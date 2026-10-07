@@ -6,6 +6,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.models.user import User
 from app.models.paper import Paper
 from app.api import auth, papers, files
+from app.api import auth, papers, files, chat
 
 app = FastAPI(
     title="ResearchPulse API",
@@ -47,6 +48,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(auth.router)
 app.include_router(papers.router)
 app.include_router(files.router)
+app.include_router(chat.router)
 
 @app.get("/")
 def root():
