@@ -6,12 +6,16 @@ from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.db.base import Base
 from app.db.session import get_db
+from sqlalchemy import text
 
 # Use separate test database
-TEST_DATABASE_URL = "postgresql://postgres:postgres123@localhost:5432/researchpulse_test"
+TEST_DATABASE_URL = (
+    "postgresql://postgres:postgres123@localhost:5433/researchpulse_test"
+)
 
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 def override_get_db():
     db = TestingSessionLocal()
@@ -20,12 +24,16 @@ def override_get_db():
     finally:
         db.close()
 
+
 # Override DB dependency
 app.dependency_overrides[get_db] = override_get_db
 
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
-    """Create all tables before tests, drop after."""
+    with engine.connect() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        conn.commit()
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
@@ -36,19 +44,23 @@ def client():
     with TestClient(app) as c:
         yield c
 
+
 @pytest.fixture(scope="module")
 def auth_headers(client):
     """Register + login → return auth headers."""
     # Register
-    client.post("/auth/register", json={
-        "email": "test@researchpulse.com",
-        "username": "testuser",
-        "password": "testpass123"
-    })
+    client.post(
+        "/auth/register",
+        json={
+            "email": "test@researchpulse.com",
+            "username": "testuser",
+            "password": "testpass123",
+        },
+    )
     # Login
-    response = client.post("/auth/login", json={
-        "email": "test@researchpulse.com",
-        "password": "testpass123"
-    })
+    response = client.post(
+        "/auth/login",
+        json={"email": "test@researchpulse.com", "password": "testpass123"},
+    )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
