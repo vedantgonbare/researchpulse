@@ -10,17 +10,15 @@ def retrieve_relevant_papers(
     owner_id: int,
     query_embedding: list[float],
     top_k: int = 5,
+    max_distance: float = 0.42,
 ):
     """
-    Find the top_k papers belonging to owner_id whose abstract embedding is most
-    semantically similar to query_embedding, using cosine distance (pgvector's <=>).
+    ... (keep existing docstring, add a line explaining max_distance) ...
 
-    Returns a list of (Paper, distance) pairs, most similar first.
-    distance is cosine distance: 0 = identical direction (most similar),
-    2 = opposite direction (least similar) — lower is better.
-
-    Papers with embedding = NULL (failed/pending embed) are excluded, since
-    cosine_distance against NULL is undefined and would corrupt the ordering.
+    max_distance: papers with cosine distance above this are excluded,
+    even if they'd otherwise fall within top_k. Default (0.42) chosen from
+    manual QA on Day 9 — on-topic results clustered at 0.28-0.40, a
+    deliberately out-of-scope question's results clustered at 0.45+.
     """
     results = (
         db.query(Paper, Paper.embedding.cosine_distance(query_embedding).label("distance"))
@@ -30,7 +28,7 @@ def retrieve_relevant_papers(
         .limit(top_k)
         .all()
     )
-    return results
+    return [(paper, distance) for paper, distance in results if distance <= max_distance]
 
 
 def build_prompt(question: str, retrieved: list[tuple[Paper, float]]) -> str:
