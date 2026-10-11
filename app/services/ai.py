@@ -1,6 +1,7 @@
 # app/services/ai.py
 from google import genai
 from app.core.config import settings
+from app.core.retry import gemini_retry
 
 # New Google GenAI client
 client = genai.Client(api_key=settings.OPENAI_API_KEY)
@@ -25,7 +26,7 @@ def summarize_abstract(abstract: str) -> str:
     prompt = SUMMARIZE_PROMPT.format(abstract=abstract)
     return generate_answer(prompt)
 
-
+@gemini_retry
 def generate_answer(prompt: str) -> str:
     """
     Call Gemini to generate a free-text answer from a fully-constructed prompt.

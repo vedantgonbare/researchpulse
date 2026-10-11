@@ -1,11 +1,13 @@
 # app/services/embeddings.py
 from google.genai.types import EmbedContentConfig
 from app.services.ai import client
+from app.core.retry import gemini_retry
 
 EMBEDDING_MODEL = "gemini-embedding-001"
 EMBEDDING_DIMENSIONS = 768
 
 
+@gemini_retry
 def embed_text(text: str, task_type: str = "RETRIEVAL_DOCUMENT") -> list[float]:
     """
     Generate a 768-dimension embedding for the given text using Gemini.
