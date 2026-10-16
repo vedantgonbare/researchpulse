@@ -1,5 +1,13 @@
 [
   {"id": "q1", "question": "What is the self-attention mechanism and how does it work?"},
   {"id": "q2", "question": "How do transformer-based language models get pre-trained?"},
-  {"id": "q3", "question": "What are the main approaches to protein folding prediction?"}
+  {"id": "q3", "question": "What techniques improve image classification accuracy using deep learning?"},
+  {"id": "q4", "question": "How does reinforcement learning work for playing video games?"},
+  {"id": "q5", "question": "How do diffusion models generate images?"},
+  {"id": "q6", "question": "How do generative adversarial networks work?"},
+  {"id": "q7", "question": "How are graph convolutional networks used for node classification?"},
+  {"id": "q8", "question": "How does self-supervised speech representation learning work?"},
+  {"id": "q9", "question": "How does federated learning train models without centralizing user data?"},
+  {"id": "q10", "question": "What are the main approaches to protein folding prediction?"},
+  {"id": "q11", "question": "What are the best strategies for medieval castle siege warfare?"}
 ]
