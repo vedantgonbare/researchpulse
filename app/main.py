@@ -1,17 +1,25 @@
 # app/main.py
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.models.user import User
 from app.models.paper import Paper
-from app.api import auth, papers, files
 from app.api import auth, papers, files, chat
 
 app = FastAPI(
     title="ResearchPulse API",
     description="Academic paper tracking and AI summarization backend",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ── Global Exception Handlers ──────────────────────────
