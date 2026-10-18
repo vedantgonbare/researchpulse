@@ -2,10 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-
-function Dashboard() {
-  return <h1 className="text-2xl font-bold p-6">Dashboard (placeholder — Day 18)</h1>;
-}
+import PapersDashboard from "./pages/PapersDashboard";
 
 function App() {
   return (
@@ -16,7 +13,7 @@ function App() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <PapersDashboard />
           </ProtectedRoute>
         }
       />
