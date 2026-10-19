@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import PapersDashboard from "./pages/PapersDashboard";
 import PaperDetail from "./pages/PaperDetail";
+import DiscoverPapers from "./pages/DiscoverPapers";
 
 function App() {
   return (
@@ -26,6 +27,14 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+      path="/discover"
+      element={
+      <ProtectedRoute>
+        <DiscoverPapers />
+        </ProtectedRoute>
+      }
+/>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
