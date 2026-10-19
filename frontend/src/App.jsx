@@ -5,6 +5,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import PapersDashboard from "./pages/PapersDashboard";
 import PaperDetail from "./pages/PaperDetail";
 import DiscoverPapers from "./pages/DiscoverPapers";
+import ResearchChat from "./pages/ResearchChat";
 
 function App() {
   return (
@@ -34,7 +35,15 @@ function App() {
         <DiscoverPapers />
         </ProtectedRoute>
       }
-/>
+      />
+      <Route
+      path="/chat"
+      element={
+      <ProtectedRoute>
+        <ResearchChat />
+        </ProtectedRoute>
+      }
+      />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
