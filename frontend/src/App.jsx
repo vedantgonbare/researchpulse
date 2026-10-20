@@ -6,6 +6,7 @@ import PapersDashboard from "./pages/PapersDashboard";
 import PaperDetail from "./pages/PaperDetail";
 import DiscoverPapers from "./pages/DiscoverPapers";
 import ResearchChat from "./pages/ResearchChat";
+import Digest from "./pages/Digest";
 
 function App() {
   return (
@@ -41,6 +42,14 @@ function App() {
       element={
       <ProtectedRoute>
         <ResearchChat />
+        </ProtectedRoute>
+      }
+      />
+      <Route
+      path="/digest"
+      element={
+      <ProtectedRoute>
+        <Digest />
         </ProtectedRoute>
       }
       />

@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useState, useEffect } from "react";
+import { apiRequest } from "../api/client";
 
 const navItems = [
   { to: "/discover", label: "Discover Papers", icon: SearchIcon },
@@ -9,8 +11,20 @@ const navItems = [
 ];
 
 export function Sidebar() {
-  const { logout } = useAuth();
-
+  const { logout, token } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(null);
+  
+  useEffect(() => {
+    let cancelled = false;
+    apiRequest("/papers/digest", { token })
+      .then((data) => {
+        if (!cancelled) setUnreadCount(data.total_unread);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
   return (
     <nav
       aria-label="Primary"
@@ -38,9 +52,9 @@ export function Sidebar() {
           >
             <Icon className="w-[18px] h-[18px]" />
             {label}
-            {badge && (
+            {badge && unreadCount !== null && unreadCount > 0 && (
               <span className="ml-auto bg-[#FFA451] text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
-                4
+                {unreadCount}
               </span>
             )}
           </NavLink>
