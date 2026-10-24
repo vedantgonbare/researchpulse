@@ -1,7 +1,17 @@
 # app/core/config.py
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore",
+    )
+
+    # Email
+    RESEND_API_KEY: str
+    FRONTEND_BASE_URL: str = "http://localhost:5173"
+
     # App
     APP_NAME: str = "ResearchPulse API"
     DEBUG: bool = True
@@ -20,22 +30,26 @@ class Settings(BaseSettings):
     # OpenAI
     OPENAI_API_KEY: str = ""
 
+    # Cloudinary
     CLOUDINARY_CLOUD_NAME: str = ""
     CLOUDINARY_API_KEY: str = ""
     CLOUDINARY_API_SECRET: str = ""
 
-    # Professor registration gate: comma-separated list of approved email domains.
-    # Empty by default — no domain registers as professor until you set this.
+    # Professor registration gate
     ALLOWED_PROFESSOR_DOMAINS: str = ""
-
-    model_config = {"env_file": ".env"}
 
     @property
     def allowed_professor_domains_list(self) -> list[str]:
-        """Parsed, lowercased, whitespace-trimmed list — the actual thing to check against."""
+        """Return approved domains, normalized and trimmed."""
         if not self.ALLOWED_PROFESSOR_DOMAINS.strip():
             return []
-        return [d.strip().lower() for d in self.ALLOWED_PROFESSOR_DOMAINS.split(",") if d.strip()]
+
+        return [
+            domain.strip().lower()
+            for domain in self.ALLOWED_PROFESSOR_DOMAINS.split(",")
+            if domain.strip()
+        ]
+
 
 # Single instance used everywhere
 settings = Settings()
