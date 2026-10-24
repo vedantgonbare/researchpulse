@@ -6,6 +6,8 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserLogin, UserResponse, TokenResponse
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.dependencies import get_current_user
+from app.models.user import UserRole
+from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -13,21 +15,29 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     """Register a new user"""
 
-    # Check if email already exists
     existing = db.query(User).filter(User.email == user_data.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Check if username already exists
     existing_username = db.query(User).filter(User.username == user_data.username).first()
     if existing_username:
         raise HTTPException(status_code=400, detail="Username already taken")
 
-    # Hash password — never store plain text
+    # Professor registration gate: email domain must be in the approved allowlist
+    if user_data.role == UserRole.professor:
+        domain = user_data.email.split("@")[-1].lower()
+        allowed = settings.allowed_professor_domains_list
+        if not allowed or domain not in allowed:
+            raise HTTPException(
+                status_code=403,
+                detail="Professor registration requires an approved university email domain.",
+            )
+
     new_user = User(
         email=user_data.email,
         username=user_data.username,
-        hashed_password=hash_password(user_data.password)
+        hashed_password=hash_password(user_data.password),
+        role=user_data.role,
     )
 
     db.add(new_user)

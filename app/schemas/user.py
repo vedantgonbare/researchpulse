@@ -1,12 +1,14 @@
 # app/schemas/user.py
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from app.models.user import UserRole
 
 class UserCreate(BaseModel):
     """Used when user sends POST /register request"""
     email: EmailStr
     username: str
     password: str
+    role: UserRole = UserRole.student
 
 class UserLogin(BaseModel):
     """Used when user sends POST /login request"""
@@ -18,6 +20,7 @@ class UserResponse(BaseModel):
     id: int
     email: str
     username: str
+    role: UserRole
     is_active: bool
     created_at: datetime
 
