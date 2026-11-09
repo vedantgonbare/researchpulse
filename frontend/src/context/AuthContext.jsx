@@ -1,3 +1,4 @@
+// src/context/AuthContext.jsx
 import { createContext, useContext, useState } from "react";
 import { apiRequest } from "../api/client";
 
@@ -20,7 +21,15 @@ export function AuthProvider({ children }) {
       method: "POST",
       body: { email, username, password },
     });
-    // doesn't log in automatically — decide below
+    // doesn't log in automatically — same contract as registerWithInvite
+  };
+
+  const registerWithInvite = async (email, username, password, inviteToken) => {
+    await apiRequest("/auth/register-with-invite", {
+      method: "POST",
+      body: { email, username, password, invite_token: inviteToken },
+    });
+    // doesn't log in automatically — matches register()'s contract
   };
 
   const logout = () => {
@@ -29,7 +38,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, login, register, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider
+      value={{ token, login, register, registerWithInvite, logout, isAuthenticated: !!token }}
+    >
       {children}
     </AuthContext.Provider>
   );
