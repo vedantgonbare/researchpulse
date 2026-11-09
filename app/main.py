@@ -6,7 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.models.user import User
 from app.models.paper import Paper
-from app.api import auth, papers, files, chat, professors
+from app.api import auth, papers, files, chat, professors, invitations, assignments, grades
 
 app = FastAPI(
     title="ResearchPulse API",
@@ -58,6 +58,9 @@ app.include_router(papers.router)
 app.include_router(files.router)
 app.include_router(chat.router)
 app.include_router(professors.router)
+app.include_router(invitations.router)
+app.include_router(assignments.router)
+app.include_router(grades.router)
 
 @app.get("/")
 def root():

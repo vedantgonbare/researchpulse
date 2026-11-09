@@ -9,3 +9,7 @@
 from app.models.user import User
 from app.models.paper import Paper
 from app.models.invitation import Invitation
+from app.models.assignment import Assignment
+from app.models.submission import Submission
+from app.models.grade import Grade
+from app.models.grade_dispute import GradeDispute
