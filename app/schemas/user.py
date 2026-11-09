@@ -30,3 +30,13 @@ class TokenResponse(BaseModel):
     """JWT token response after successful login"""
     access_token: str
     token_type: str = "bearer"
+
+class RegisterWithInviteRequest(BaseModel):
+    """
+    Registration via an invite link. No `role` field — anyone using this
+    endpoint is a student by definition, since only professors send invites.
+    """
+    email: EmailStr
+    username: str
+    password: str
+    invite_token: str

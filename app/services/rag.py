@@ -12,14 +12,6 @@ def retrieve_relevant_papers(
     top_k: int = 5,
     max_distance: float = 0.42,
 ):
-    """
-    ... (keep existing docstring, add a line explaining max_distance) ...
-
-    max_distance: papers with cosine distance above this are excluded,
-    even if they'd otherwise fall within top_k. Default (0.42) chosen from
-    manual QA on Day 9 — on-topic results clustered at 0.28-0.40, a
-    deliberately out-of-scope question's results clustered at 0.45+.
-    """
     results = (
         db.query(Paper, Paper.embedding.cosine_distance(query_embedding).label("distance"))
         .filter(Paper.owner_id == owner_id)
