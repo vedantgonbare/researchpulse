@@ -1,11 +1,35 @@
 // src/context/AuthContext.jsx
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect  } from "react";
 import { apiRequest } from "../api/client";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("access_token"));
+  const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const data = await apiRequest("/auth/me", { method: "GET", token });
+      setUser(data);
+    } catch {
+      localStorage.removeItem("access_token");
+      setToken(null);
+      setUser(null);
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchCurrentUser();
+    } else {
+      setUserLoading(false);
+    }
+  }, [token]);
+
 
   const login = async (email, password) => {
     const data = await apiRequest("/auth/login", {
@@ -21,7 +45,6 @@ export function AuthProvider({ children }) {
       method: "POST",
       body: { email, username, password },
     });
-    // doesn't log in automatically — same contract as registerWithInvite
   };
 
   const registerWithInvite = async (email, username, password, inviteToken) => {
@@ -29,17 +52,17 @@ export function AuthProvider({ children }) {
       method: "POST",
       body: { email, username, password, invite_token: inviteToken },
     });
-    // doesn't log in automatically — matches register()'s contract
   };
 
   const logout = () => {
     localStorage.removeItem("access_token");
     setToken(null);
+    setUser(null);
   };
 
   return (
     <AuthContext.Provider
-      value={{ token, login, register, registerWithInvite, logout, isAuthenticated: !!token }}
+      value={{ token, user, userLoading, login, register, registerWithInvite, logout, isAuthenticated: !!token }}
     >
       {children}
     </AuthContext.Provider>
