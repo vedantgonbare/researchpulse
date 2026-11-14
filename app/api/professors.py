@@ -8,6 +8,7 @@ from app.models.user import User, UserRole
 from app.models.invitation import Invitation, InviteStatus
 from app.schemas.invitation import InvitationCreate, InvitationResponse
 from app.services.email import send_invitation_email
+from app.schemas.user import StudentResponse
 
 router = APIRouter(prefix="/professors", tags=["Professors"])
 
@@ -44,3 +45,38 @@ def invite_student(
         print(f"Failed to send invitation email to {invite_data.student_email}: {e}")
 
     return invitation
+
+@router.get("/students")
+def list_my_students(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.professor)),
+):
+    """
+    List the students currently linked to this professor
+    (i.e. professor_id == current_user.id on the User table).
+    """
+    students = (
+        db.query(User)
+        .filter(User.professor_id == current_user.id, User.role == UserRole.student)
+        .all()
+    )
+    return [
+        {"id": s.id, "email": s.email, "username": s.username, "created_at": s.created_at}
+        for s in students
+    ]
+
+
+@router.get("/students", response_model=list[StudentResponse])
+def list_my_students(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.professor)),
+):
+    """
+    List the students currently linked to this professor
+    (i.e. professor_id == current_user.id on the User table).
+    """
+    return (
+        db.query(User)
+        .filter(User.professor_id == current_user.id, User.role == UserRole.student)
+        .all()
+    )
