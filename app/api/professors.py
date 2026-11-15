@@ -13,6 +13,21 @@ from app.schemas.user import StudentResponse
 router = APIRouter(prefix="/professors", tags=["Professors"])
 
 
+@router.get("/students", response_model=list[StudentResponse])
+def list_my_students(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.professor)),
+):
+    """
+    List the students currently linked to this professor
+    (i.e. professor_id == current_user.id on the User table).
+    """
+    return (
+        db.query(User)
+        .filter(User.professor_id == current_user.id, User.role == UserRole.student)
+        .all()
+    )
+
 @router.post("/invite", response_model=InvitationResponse)
 def invite_student(
     invite_data: InvitationCreate,
@@ -24,6 +39,20 @@ def invite_student(
     stores it as a pending Invitation, and emails the student a signup
     link containing that token.
     """
+    already_assigned = (
+        db.query(User)
+        .filter(
+            User.email == invite_data.student_email,
+            User.professor_id == current_user.id,
+        )
+        .first()
+    )
+    if already_assigned:
+        raise HTTPException(
+            status_code=400,
+            detail="This student is already assigned to you.",
+        )
+
     # Generate a random, URL-safe token — not guessable, not sequential
     token = secrets.token_urlsafe(32)
 
@@ -40,43 +69,6 @@ def invite_student(
     try:
         send_invitation_email(invite_data.student_email, token)
     except Exception as e:
-        # The invitation record is already saved — don't lose it just
-        # because the email failed to send. Flag it, don't crash.
         print(f"Failed to send invitation email to {invite_data.student_email}: {e}")
 
     return invitation
-
-@router.get("/students")
-def list_my_students(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.professor)),
-):
-    """
-    List the students currently linked to this professor
-    (i.e. professor_id == current_user.id on the User table).
-    """
-    students = (
-        db.query(User)
-        .filter(User.professor_id == current_user.id, User.role == UserRole.student)
-        .all()
-    )
-    return [
-        {"id": s.id, "email": s.email, "username": s.username, "created_at": s.created_at}
-        for s in students
-    ]
-
-
-@router.get("/students", response_model=list[StudentResponse])
-def list_my_students(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.professor)),
-):
-    """
-    List the students currently linked to this professor
-    (i.e. professor_id == current_user.id on the User table).
-    """
-    return (
-        db.query(User)
-        .filter(User.professor_id == current_user.id, User.role == UserRole.student)
-        .all()
-    )
