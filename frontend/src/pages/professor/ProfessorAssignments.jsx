@@ -7,17 +7,19 @@ import { PageShell } from "../../components/PageShell";
 export default function ProfessorAssignments() {
   const { token } = useAuth();
 
-  // students list, for the picker — same fetch pattern as ProfessorDashboard
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(true);
   const [studentsError, setStudentsError] = useState(null);
 
-  // form state — separate from the students-fetch state, same reasoning as the invite form
+  const [assignments, setAssignments] = useState([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(true);
+  const [assignmentsError, setAssignmentsError] = useState(null);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [studentId, setStudentId] = useState("");
   const [creating, setCreating] = useState(false);
-  const [result, setResult] = useState(null); // { type: "success" | "error", text }
+  const [result, setResult] = useState(null);
 
   useEffect(() => {
     async function fetchStudents() {
@@ -30,8 +32,22 @@ export default function ProfessorAssignments() {
         setStudentsLoading(false);
       }
     }
+    async function fetchAssignments() {
+      try {
+        const data = await apiRequest("/assignments/", { token });
+        setAssignments(data);
+      } catch (err) {
+        setAssignmentsError("Could not load your assignments. Try refreshing.");
+      } finally {
+        setAssignmentsLoading(false);
+      }
+    }
     fetchStudents();
+    fetchAssignments();
   }, [token]);
+
+  // id -> student, so the list can show a name instead of a raw student_id
+  const studentById = Object.fromEntries(students.map((s) => [s.id, s]));
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -49,6 +65,7 @@ export default function ProfessorAssignments() {
         },
       });
       setResult({ type: "success", text: `Assignment "${assignment.title}" created.` });
+      setAssignments((prev) => [assignment, ...prev]);
       setTitle("");
       setDescription("");
       setStudentId("");
@@ -62,7 +79,6 @@ export default function ProfessorAssignments() {
   if (studentsLoading) {
     return <PageShell><p className="text-brand-text-muted">Loading your students…</p></PageShell>;
   }
-
   if (studentsError) {
     return <PageShell><p className="text-brand-text-muted">{studentsError}</p></PageShell>;
   }
@@ -76,7 +92,7 @@ export default function ProfessorAssignments() {
           You don't have any students yet — invite one from the My Students page first.
         </p>
       ) : (
-        <form onSubmit={handleCreate} className="flex flex-col gap-4 max-w-xl">
+        <form onSubmit={handleCreate} className="flex flex-col gap-4 max-w-xl mb-8">
           <input
             type="text"
             required
@@ -116,9 +132,38 @@ export default function ProfessorAssignments() {
       )}
 
       {result && (
-        <p className={result.type === "success" ? "text-green-600 mt-4" : "text-red-600 mt-4"}>
+        <p className={result.type === "success" ? "text-green-600 mb-6" : "text-red-600 mb-6"}>
           {result.text}
         </p>
+      )}
+
+      <h2 className="text-lg font-semibold text-brand-navy mb-4">My assignments</h2>
+
+      {assignmentsLoading ? (
+        <p className="text-brand-text-muted">Loading assignments…</p>
+      ) : assignmentsError ? (
+        <p className="text-brand-text-muted">{assignmentsError}</p>
+      ) : assignments.length === 0 ? (
+        <p className="text-brand-text-muted">No assignments created yet.</p>
+      ) : (
+        <ul className="space-y-2">
+          {assignments.map((a) => {
+            const student = studentById[a.student_id];
+            return (
+              <li key={a.id} className="bg-brand-surface rounded-xl p-4 shadow-sm">
+                <div className="flex justify-between items-start">
+                  <span className="font-medium">{a.title}</span>
+                  <span className="text-brand-text-muted text-sm">
+                    {student ? student.username : `Student #${a.student_id}`}
+                  </span>
+                </div>
+                {a.description && (
+                  <p className="text-brand-text-muted text-sm mt-1">{a.description}</p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       )}
     </PageShell>
   );
