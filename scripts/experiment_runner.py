@@ -20,6 +20,7 @@ import time
 from datetime import datetime, timezone
 
 from google.genai.errors import ServerError, ClientError
+from httpx import TransportError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -72,7 +73,7 @@ def run_arm(arm_name: str, question_id: str, question: str, fn) -> dict | None:
     start = time.monotonic()
     try:
         result = fn()
-    except (ServerError, ClientError) as e:
+    except (ServerError, ClientError, TransportError) as e:
         print(f"  [{arm_name}] FAILED for {question_id}: {e}")
         return None
     elapsed = round(time.monotonic() - start, 2)
